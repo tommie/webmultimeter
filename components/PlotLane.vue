@@ -49,7 +49,8 @@ const yAxis = svg
       .clone()
       .attr("x2", width.value - marginLeft - marginRight)
       .attr("stroke-opacity", 0.1),
-  );
+  )
+  .call((g) => g.append("text"));
 watch(
   width,
   (width) => {
@@ -109,7 +110,7 @@ watch(
 
     yAxis.call((g) =>
       g
-        .append("text")
+        .select("text")
         .attr("x", 0)
         .attr("y", marginTop * 0.8)
         .attr("fill", "currentColor")
