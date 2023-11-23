@@ -4,9 +4,9 @@ export namespace UM25CProtocol {
     return Uint8Array.of(0xa0 + n);
   }
 
-  export function buildSetRecordCurrent(n: number) {
-    if (n < 0 || n > 31) throw new Error(`Record index out of bounds: ${n}`);
-    return Uint8Array.of(0xb0 + n);
+  export function buildSetRecordCurrentThreshold(mA: number) {
+    if (mA < 0 || mA > 31) throw new Error(`Record index out of bounds: ${mA}`);
+    return Uint8Array.of(0xb0 + Math.floor(mA));
   }
 
   export function buildSetScreenBrightness(n: number) {
@@ -41,12 +41,24 @@ export namespace UM25CProtocol {
       dataMinusVoltage: view.getUint16(98, false),
       screenTimeout: view.getUint16(118, false),
       resistance: view.getUint32(122, false),
+      recording: {
+        charge: view.getUint32(102, false),
+        energy: view.getUint32(106, false),
+        currentThreshold: view.getUint16(110, false),
+        runtime: view.getUint32(112, false),
+      },
     } satisfies UM25CProtocol.RawDataPoint;
 
+    const deviceModel = view.getUint16(0, false) as UM25CProtocol.DeviceModel;
+    const voltageDivisor =
+      deviceModel === UM25CProtocol.DeviceModel.UM25C ? 1000 : 100;
+    const currentDivisor =
+      deviceModel === UM25CProtocol.DeviceModel.UM25C ? 10000 : 1000;
+
     return {
-      deviceModel: view.getUint16(0, false) as UM25CProtocol.DeviceModel,
-      voltage: rawValues.voltage / 1000,
-      current: rawValues.current / 10000,
+      deviceModel,
+      voltage: rawValues.voltage / voltageDivisor,
+      current: rawValues.current / currentDivisor,
       power: rawValues.power / 1000,
       temperature: {
         celsius: rawValues.temperatureC,
@@ -62,7 +74,7 @@ export namespace UM25CProtocol {
       },
       chargeMode: view.getUint16(100, false) as UM25CProtocol.ChargeMode,
       screen: {
-        group: view.getUint16(14, false),
+        group: view.getUint16(14, false) & 0xff,
         timeout: rawValues.screenTimeout * 60000,
         brightness: view.getUint16(120, false),
         pageIndex: view.getUint16(126, false),
@@ -70,9 +82,11 @@ export namespace UM25CProtocol {
       resistance: rawValues.resistance / 10,
 
       recording: {
-        charge: view.getUint32(102, false) / 1000 / 3600,
-        energy: view.getUint32(106, false) / 1000 / 3600,
-        runtime: view.getUint32(112, false) * 1000,
+        charge: rawValues.recording.charge / 1000 / 3600,
+        energy: rawValues.recording.energy / 1000 / 3600,
+        currentThreshold: rawValues.recording.currentThreshold / 100,
+        runtime: rawValues.recording.runtime * 1000,
+        enabled: Boolean(view.getUint16(116, false)),
       },
 
       rawValues,
@@ -86,16 +100,22 @@ export namespace UM25CProtocol {
   }
 
   export interface RawDataPoint {
-    voltage: number; // mV
-    current: number; // 0.1 mA
+    voltage: number; // mV or 10 mV
+    current: number; // 0.1 mA or 1 mA
     power: number; // mW
     temperatureC: number;
     temperatureF: number;
     groups: RawGroupDataPoint[];
-    dataPlusVoltage: number; // hV
-    dataMinusVoltage: number; // hV
+    dataPlusVoltage: number; // 10 mV
+    dataMinusVoltage: number; // 10 mV
     screenTimeout: number; // minutes
-    resistance: number; // dOhm
+    resistance: number; // 100 mOhm
+    recording: {
+      charge: number; // C
+      energy: number; // J
+      currentThreshold: number; // 10 mA
+      runtime: number; // milliseconds
+    };
   }
 
   // In SI base units: C and J.
@@ -126,7 +146,9 @@ export namespace UM25CProtocol {
     recording: {
       charge: number; // C
       energy: number; // J
+      currentThreshold: number;
       runtime: number; // milliseconds
+      enabled: boolean;
     };
 
     rawValues: RawDataPoint;
@@ -144,11 +166,11 @@ export namespace UM25CProtocol {
     UNKNOWN = 0,
     QC2_0 = 1,
     QC3_0 = 2,
-    APP_2_4A = 3,
-    APP_2_1A = 4,
-    APP_1_0A = 5,
-    APP_0_5A = 6,
-    DCP_1_5A = 7,
+    APPLE_2_4A = 3,
+    APPLE_2_1A = 4,
+    APPLE_1_0A = 5,
+    APPLE_0_5A = 6,
+    ANDROID_DCP_1_5A = 7,
     SAMSUNG = 8,
   }
 
@@ -204,8 +226,8 @@ export class UM25CConnection {
     await this.sendCommand(UM25CProtocol.buildSelectGroup(n));
   }
 
-  public async setRecordCurrent(n: number) {
-    await this.sendCommand(UM25CProtocol.buildSetRecordCurrent(n));
+  public async setRecordCurrentThreshold(mA: number) {
+    await this.sendCommand(UM25CProtocol.buildSetRecordCurrentThreshold(mA));
   }
 
   public async setScreenBrightness(n: number) {
