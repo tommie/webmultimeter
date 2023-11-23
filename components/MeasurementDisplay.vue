@@ -34,17 +34,17 @@ const CHARGE_UNITS: ComputedUnit[] = [
       legend="Snapshot"
       :pt="{ content: { class: 'flex flex-column gap-3' } }"
     >
-      <MeasurementDisplayValue
-        label="Voltage"
-        :value="value.voltage"
-        unit="V"
-      />
+      <MeasurementDisplayValue label="Power" :value="value.power" unit="W" />
       <MeasurementDisplayValue
         label="Current"
         :value="value.current"
         unit="A"
       />
-      <MeasurementDisplayValue label="Power" :value="value.power" unit="W" />
+      <MeasurementDisplayValue
+        label="Voltage"
+        :value="value.voltage"
+        unit="V"
+      />
       <MeasurementDisplayValue
         label="Temperature"
         :value="value.temperature.celsius"

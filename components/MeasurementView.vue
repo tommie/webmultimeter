@@ -118,12 +118,12 @@ function onResetGroup(index: number) {
       <ClientOnly>
         <figure>
           <caption>
-            Voltage
+            Power
           </caption>
           <PlotLane
             class="plot"
-            :value="dataStore.dataPoints.map((v) => [v.timestamp, v.voltage])"
-            unit="V"
+            :value="dataStore.dataPoints.map((v) => [v.timestamp, v.power])"
+            unit="W"
           />
         </figure>
         <figure>
@@ -134,6 +134,16 @@ function onResetGroup(index: number) {
             class="plot"
             :value="dataStore.dataPoints.map((v) => [v.timestamp, v.current])"
             unit="A"
+          />
+        </figure>
+        <figure>
+          <caption>
+            Voltage
+          </caption>
+          <PlotLane
+            class="plot"
+            :value="dataStore.dataPoints.map((v) => [v.timestamp, v.voltage])"
+            unit="V"
           />
         </figure>
         <figure v-for="index in activeGroupIndices()" :key="index">
