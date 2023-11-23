@@ -1,56 +1,49 @@
 <script setup lang="ts">
+import type DeviceSelector from "../components/DeviceSelector.vue";
 import { type UM25CConnection, UM25CProtocol } from "../utils/um25c";
 
-const hadConn = ref(false);
-const conn = shallowRef<UM25CConnection>();
-const deviceModel = ref<UM25CProtocol.DeviceModel>(
-  UM25CProtocol.DeviceModel.UNKNOWN,
-);
-onUnmounted(async () => {
-  await conn.value?.close();
-});
-watch(conn, async (conn, oldConn) => {
-  deviceModel.value = UM25CProtocol.DeviceModel.UNKNOWN;
-  await oldConn?.close();
+const viewStore = useViewStore();
+const selectorRef = ref<typeof DeviceSelector>();
+onMounted(async () => {
+  if (!viewStore.autoConnect || !selectorRef.value) return;
 
-  if (!conn) return;
-
-  hadConn.value = true;
-
-  const data = await conn.readData();
-  deviceModel.value = data.deviceModel;
+  selectorRef.value.autoConnect();
 });
 
-function onConnected(connection: UM25CConnection) {
-  conn.value = connection;
+async function onConnected(connection: UM25CConnection) {
+  viewStore.setConnection(
+    connection,
+    (await connection.readData()).deviceModel,
+  );
 }
 
 async function onClickClose() {
-  conn.value = undefined;
+  viewStore.setConnection(null, UM25CProtocol.DeviceModel.UNKNOWN);
 }
 </script>
 
 <template>
   <div>
     <DeviceSelector
-      v-if="!conn"
-      :auto-connect="!hadConn"
+      ref="selectorRef"
+      v-if="!viewStore.connection"
       @connected="onConnected"
     />
-    <div v-if="conn">
+    <div v-else>
       <Toolbar>
         <template #start>
           <Button label="Close" @click="onClickClose" />
         </template>
         <template #end>
-          <ConnectionStateIndicator :conn="conn" />
+          <ConnectionStateIndicator :conn="viewStore.connection" />
           <div class="ml-3 text-color-secondary hover:text-color">
-            Connected to a {{ UM25CProtocol.DeviceModel[deviceModel] }}
+            Connected to a
+            {{ UM25CProtocol.DeviceModel[viewStore.deviceModel] }}
           </div>
         </template>
       </Toolbar>
 
-      <MeasurementView :conn="conn" />
+      <MeasurementView :conn="viewStore.connection" />
     </div>
   </div>
 </template>

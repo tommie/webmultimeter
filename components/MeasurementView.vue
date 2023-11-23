@@ -2,7 +2,7 @@
 import { type UM25CConnection, UM25CProtocol } from "../utils/um25c";
 
 const props = defineProps<{
-  conn: UM25CConnection;
+  conn: Readonly<UM25CConnection>;
 }>();
 
 const dataStore = useDataStore();

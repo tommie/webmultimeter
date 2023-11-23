@@ -1,11 +1,25 @@
 import { acceptHMRUpdate, defineStore } from "pinia";
 
+import { type UM25CConnection, UM25CProtocol } from "../utils/um25c";
+
 export const useViewStore = defineStore("viewStore", () => {
   const units = ref(
     new Map<string, string>(
-      Object.entries(localStorage.getItem("viewStore/units") ?? "{}"),
+      Object.entries(
+        process.client ? localStorage.getItem("viewStore/units") ?? "{}" : [],
+      ),
     ),
   );
+  const autoConnect = ref(true);
+  const connection = shallowRef<UM25CConnection | null>(null);
+  const deviceModel = ref<UM25CProtocol.DeviceModel>(
+    UM25CProtocol.DeviceModel.UNKNOWN,
+  );
+  watch(connection, async (_conn, oldConn) => {
+    if (oldConn) {
+      await oldConn.close();
+    }
+  });
 
   let needsStorage = false;
   function requestStorage() {
@@ -24,6 +38,9 @@ export const useViewStore = defineStore("viewStore", () => {
 
   return {
     units,
+    autoConnect,
+    connection,
+    deviceModel,
 
     getUnits(key: string, def: string) {
       return units.value.get(key) ?? def;
@@ -32,6 +49,18 @@ export const useViewStore = defineStore("viewStore", () => {
     setUnits(key: string, value: string) {
       units.value.set(key, value);
       requestStorage();
+    },
+
+    setAutoConnect(b: boolean) {
+      autoConnect.value = b;
+    },
+
+    setConnection(
+      conn: UM25CConnection | null,
+      model: UM25CProtocol.DeviceModel,
+    ) {
+      connection.value = conn ? markRaw(conn) : null;
+      deviceModel.value = model;
     },
   };
 });

@@ -1,12 +1,8 @@
 <script setup lang="ts">
-import {
-  type UM25CConnection,
-  type UM25CEvent,
-  UM25CProtocol,
-} from "../utils/um25c";
+import { type UM25CConnection, type UM25CEvent } from "../utils/um25c";
 
 const props = defineProps<{
-  conn: UM25CConnection;
+  conn: Readonly<UM25CConnection>;
 }>();
 
 enum ConnState {
@@ -20,7 +16,7 @@ enum ConnState {
 
 const connState = ref<ConnState>(ConnState.UNCONNECTED);
 
-function getConnState(conn: UM25CConnection) {
+function getConnState(conn: Readonly<UM25CConnection>) {
   if (conn.failed) return ConnState.FAILED;
   if (conn.receiving) return ConnState.RECEIVING;
   return ConnState.IDLE;

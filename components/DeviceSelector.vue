@@ -1,15 +1,6 @@
 <script setup lang="ts">
 import { UM25CConnection } from "../utils/um25c";
 
-const props = withDefaults(
-  defineProps<{
-    autoConnect?: boolean;
-  }>(),
-  {
-    autoConnect: false,
-  },
-);
-
 const emit = defineEmits<{
   (e: "connecting", port: SerialPort): void;
   (e: "connected", conn: UM25CConnection): void;
@@ -17,7 +8,8 @@ const emit = defineEmits<{
 }>();
 
 const available = ref<boolean>();
-const serialPorts = reactive<SerialPort[]>([]);
+const serialPorts = shallowReactive<SerialPort[]>([]);
+let autoConnectRequested = false;
 onMounted(async () => {
   available.value = "serial" in navigator;
 
@@ -25,10 +17,22 @@ onMounted(async () => {
 
   serialPorts.splice(0, 0, ...(await navigator.serial.getPorts()));
 
-  if (props.autoConnect && serialPorts.length === 1) {
-    await connect(serialPorts[0]);
+  if (autoConnectRequested) {
+    autoConnect();
   }
 });
+
+async function autoConnect() {
+  if (serialPorts.length === 0) {
+    autoConnectRequested = true;
+    return;
+  }
+
+  if (serialPorts.length === 1) {
+    await connect(serialPorts[0]);
+  }
+  autoConnectRequested = false;
+}
 
 const connecting = ref(false);
 const error = ref<Error>();
@@ -73,6 +77,11 @@ async function onClickOpenOther() {
     throw e;
   }
 }
+
+defineExpose({
+  // Attempt to auto-connect, if that is a reasonable thing to do.
+  autoConnect,
+});
 </script>
 
 <template>
