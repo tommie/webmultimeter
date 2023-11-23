@@ -92,6 +92,7 @@ function onResetGroup(index: number) {
             Voltage
           </caption>
           <PlotLane
+            class="plot"
             :value="dataStore.dataPoints.map((v) => [v.timestamp, v.voltage])"
             unit="V"
           />
@@ -101,6 +102,7 @@ function onResetGroup(index: number) {
             Current
           </caption>
           <PlotLane
+            class="plot"
             :value="
               dataStore.dataPoints.map((v) => [v.timestamp, v.current * 1000])
             "
@@ -121,6 +123,7 @@ function onResetGroup(index: number) {
             }}
           </caption>
           <PlotLane
+            class="plot"
             :value="
               dataStore.dataPoints.map((v) => [
                 v.timestamp,
@@ -139,5 +142,9 @@ function onResetGroup(index: number) {
 figure > caption {
   display: block;
   text-align: center;
+}
+
+.plot {
+  height: 33vh;
 }
 </style>
