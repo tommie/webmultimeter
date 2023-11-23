@@ -90,7 +90,7 @@ const CHARGE_UNITS: ComputedUnit[] = [
           class="reset-button"
           label="Reset"
           severity="warning"
-          size="sm"
+          size="small"
           text
           @click="() => emit('resetgroup', index)"
         />
