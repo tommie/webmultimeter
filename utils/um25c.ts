@@ -21,7 +21,7 @@ export namespace UM25CProtocol {
   }
 
   export function buildClickButton(btn: UM25CProtocol.Button) {
-    return Uint8Array.of(0xe0 + btn);
+    return Uint8Array.of(0xf0 + btn);
   }
 
   const GROUP_PLACEHOLDERS = new Array(10).fill(undefined);
