@@ -44,6 +44,7 @@ export namespace UM25CProtocol {
     } satisfies UM25CProtocol.RawDataPoint;
 
     return {
+      deviceModel: view.getUint16(0, false) as UM25CProtocol.DeviceModel,
       voltage: rawValues.voltage / 1000,
       current: rawValues.current / 10000,
       power: rawValues.power / 1000,
@@ -101,6 +102,7 @@ export namespace UM25CProtocol {
   export type GroupDataPoint = RawGroupDataPoint;
 
   export interface DataPoint {
+    deviceModel: DeviceModel;
     voltage: number;
     current: number;
     power: number;
@@ -129,6 +131,13 @@ export namespace UM25CProtocol {
 
     rawValues: RawDataPoint;
     rawData: ArrayBuffer;
+  }
+
+  export enum DeviceModel {
+    UNKNOWN = 0,
+    UM24C = 2403,
+    UM25C = 2505,
+    UM34C = 3404,
   }
 
   export enum ChargeMode {

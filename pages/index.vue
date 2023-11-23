@@ -1,12 +1,24 @@
 <script setup lang="ts">
-import { type UM25CConnection } from "../utils/um25c";
+import { type UM25CConnection, UM25CProtocol } from "../utils/um25c";
 
+const hadConn = ref(false);
 const conn = shallowRef<UM25CConnection>();
+const deviceModel = ref<UM25CProtocol.DeviceModel>(
+  UM25CProtocol.DeviceModel.UNKNOWN,
+);
 onUnmounted(async () => {
   await conn.value?.close();
 });
-watch(conn, async (_conn, oldConn) => {
+watch(conn, async (conn, oldConn) => {
+  deviceModel.value = UM25CProtocol.DeviceModel.UNKNOWN;
   await oldConn?.close();
+
+  if (!conn) return;
+
+  hadConn.value = true;
+
+  const data = await conn.readData();
+  deviceModel.value = data.deviceModel;
 });
 
 function onConnected(connection: UM25CConnection) {
@@ -20,12 +32,20 @@ async function onClickClose() {
 
 <template>
   <div>
-    <!-- Using v-show so auto-connect only happens on first mount. -->
-    <DeviceSelector v-show="!conn" auto-connect @connected="onConnected" />
+    <DeviceSelector
+      v-if="!conn"
+      :auto-connect="!hadConn"
+      @connected="onConnected"
+    />
     <div v-if="conn">
       <Toolbar>
         <template #start>
-          <Button @click="onClickClose">Close</Button>
+          <Button label="Close" @click="onClickClose" />
+        </template>
+        <template #end>
+          <div class="ml-3 text-color-secondary hover:text-color">
+            Connected to a {{ UM25CProtocol.DeviceModel[deviceModel] }}
+          </div>
         </template>
       </Toolbar>
 
