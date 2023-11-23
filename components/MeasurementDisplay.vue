@@ -60,8 +60,9 @@ const CHARGE_UNITS: ComputedUnit[] = [
     </Fieldset>
     <template v-for="(group, index) in value.groups" :key="index">
       <Fieldset
-        v-if="group.energy || group.charge"
-        :legend="`Group ${index}`"
+        v-if="index === 0 || group.energy || group.charge"
+        :legend="index ? `Group ${index}` : 'Since Power-On'"
+        toggleable
         class="my-3"
         :pt="{ content: { class: 'flex flex-column gap-3' } }"
       >
