@@ -322,8 +322,13 @@ export class UM25CConnection extends UM25CEventTarget {
     await this.writer.write(cmd);
   }
 
-  protected async receiveResponse(numBytes: number) {
+  protected receiveResponse(numBytes: number) {
     return new Promise<Uint8Array>(async (resolve, reject) => {
+      if (this.failure_) {
+        reject(this.failure_);
+        return;
+      }
+
       let timeout: ReturnType<typeof setTimeout> | undefined;
 
       const acceptor = [
