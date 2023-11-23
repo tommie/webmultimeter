@@ -6,7 +6,7 @@ Serial API to connect directly to the Bluetooth device.
 This is a quick hack. It probably leaks memory, and it uses
 Local Storage where it should use IndexedDB.
 
-![Screenshot](https://raw.githubusercontent.com/tommie/webmultimeter/blob/main/docs/media/screenshot.webm.mov)
+![Screenshot](https://raw.githubusercontent.com/tommie/webmultimeter/main/docs/media/screenshot.webm.mov)
 
 ## Building
 
