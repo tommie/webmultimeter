@@ -6,7 +6,7 @@ Serial API to connect directly to the Bluetooth device.
 This is a quick hack. It probably leaks memory, and it uses
 Local Storage where it should use IndexedDB.
 
-![Screenshot](./docs/media/screenshot.webm)
+![Screenshot](./docs/media/screenshot.webm.mov)
 
 ## Building
 
