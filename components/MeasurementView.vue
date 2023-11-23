@@ -48,6 +48,22 @@ watch(
   { immediate: true },
 );
 
+function activeGroupIndices() {
+  return dataStore.latestDataPoint.groups
+    .map(
+      (group, index) =>
+        [index, group] as [number, UM25CProtocol.GroupDataPoint],
+    )
+    .filter(([index, group]) => group.energy > 0)
+    .map(([index]) => index);
+}
+
+const groupMeasurementGraph = ref<"charge" | "energy">("energy");
+function onClickCumulativeCaption() {
+  groupMeasurementGraph.value =
+    groupMeasurementGraph.value === "charge" ? "energy" : "charge";
+}
+
 function onResetGroup(index: number) {
   return props.conn.clickButton(UM25CProtocol.Button.RESET_GROUP);
 }
@@ -70,26 +86,57 @@ function onResetGroup(index: number) {
 
     <div class="col-10">
       <ClientOnly>
-        <PlotLane
-          :value="dataStore.dataPoints.map((v) => [v.timestamp, v.voltage])"
-          unit="V"
-        />
-        <PlotLane
-          :value="
-            dataStore.dataPoints.map((v) => [v.timestamp, v.current * 1000])
-          "
-          unit="mA"
-        />
-        <PlotLane
-          :value="
-            dataStore.dataPoints.map((v) => [
-              v.timestamp,
-              v.groups[0].energy * 1000 * 3600,
-            ])
-          "
-          unit="mWh"
-        />
+        <figure>
+          <caption>
+            Voltage
+          </caption>
+          <PlotLane
+            :value="dataStore.dataPoints.map((v) => [v.timestamp, v.voltage])"
+            unit="V"
+          />
+        </figure>
+        <figure>
+          <caption>
+            Current
+          </caption>
+          <PlotLane
+            :value="
+              dataStore.dataPoints.map((v) => [v.timestamp, v.current * 1000])
+            "
+            unit="mA"
+          />
+        </figure>
+        <figure v-for="index in activeGroupIndices()" :key="index">
+          <caption
+            class="cursor-pointer hover:text-primary"
+            @click="onClickCumulativeCaption"
+          >
+            {{
+              index ? `Group ${index}` : undefined
+            }}
+            Cumulative
+            {{
+              groupMeasurementGraph === "charge" ? "Charge" : "Energy"
+            }}
+          </caption>
+          <PlotLane
+            :value="
+              dataStore.dataPoints.map((v) => [
+                v.timestamp,
+                v.groups[index][groupMeasurementGraph] * 1000 * 3600,
+              ])
+            "
+            :unit="groupMeasurementGraph === 'charge' ? 'mAh' : 'mWh'"
+          />
+        </figure>
       </ClientOnly>
     </div>
   </div>
 </template>
+
+<style scoped>
+figure > caption {
+  display: block;
+  text-align: center;
+}
+</style>
