@@ -82,7 +82,7 @@ function onClick() {
 <template>
   <div
     :class="[
-      'flex flex-column root',
+      'flex flex-column text-right root',
       props.units?.length > 1 ? 'has-units' : undefined,
     ]"
     @click="onClick"
