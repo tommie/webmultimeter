@@ -7,7 +7,8 @@ export const useDataStore = defineStore("dataStore", () => {
     JSON.parse(localStorage.getItem("dataStore/points") ?? "[]"),
   );
 
-  const MAX_DATA_POINTS = 1 << 16;
+  // 6000 is too large for Chrome's local storage item.
+  const MAX_DATA_POINTS = 1 << 12;
 
   function pruneDataPoints() {
     if (dataPoints.value.length <= MAX_DATA_POINTS) {
