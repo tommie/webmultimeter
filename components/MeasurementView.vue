@@ -6,6 +6,7 @@ const props = defineProps<{
 }>();
 
 const dataStore = useDataStore();
+const viewStore = useViewStore();
 const readInterval = ref<ReturnType<typeof setInterval>>();
 const readError = ref<Error>();
 onUnmounted(() => {
@@ -66,6 +67,34 @@ function onClickCumulativeCaption() {
     groupMeasurementGraph.value === "charge" ? "energy" : "charge";
 }
 
+const groupUnit = computed(() => {
+  const units = viewStore.getUnits(
+    groupMeasurementGraph.value,
+    groupMeasurementGraph.value === "charge" ? "C" : "J",
+  );
+  let fn = (v: number) => v;
+  if (units === "Ah" || units === "Wh") {
+    fn = (v: number) => v * 3600;
+  } else {
+    fn = (v: number) => v;
+  }
+
+  switch (groupMeasurementGraph.value) {
+    case "charge":
+      return {
+        label: "Charge",
+        units,
+        fn,
+      };
+    case "energy":
+      return {
+        label: "Energy",
+        units,
+        fn,
+      };
+  }
+});
+
 function onResetGroup(index: number) {
   return props.conn.clickButton(UM25CProtocol.Button.RESET_GROUP);
 }
@@ -103,10 +132,8 @@ function onResetGroup(index: number) {
           </caption>
           <PlotLane
             class="plot"
-            :value="
-              dataStore.dataPoints.map((v) => [v.timestamp, v.current * 1000])
-            "
-            unit="mA"
+            :value="dataStore.dataPoints.map((v) => [v.timestamp, v.current])"
+            unit="A"
           />
         </figure>
         <figure v-for="index in activeGroupIndices()" :key="index">
@@ -119,7 +146,7 @@ function onResetGroup(index: number) {
             }}
             Cumulative
             {{
-              groupMeasurementGraph === "charge" ? "Charge" : "Energy"
+              groupUnit.label
             }}
           </caption>
           <PlotLane
@@ -127,10 +154,10 @@ function onResetGroup(index: number) {
             :value="
               dataStore.dataPoints.map((v) => [
                 v.timestamp,
-                v.groups[index][groupMeasurementGraph] * 1000 * 3600,
+                groupUnit.fn(v.groups[index][groupMeasurementGraph]),
               ])
             "
-            :unit="groupMeasurementGraph === 'charge' ? 'mAh' : 'mWh'"
+            :unit="groupUnit.units"
           />
         </figure>
       </ClientOnly>

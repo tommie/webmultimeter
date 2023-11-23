@@ -10,9 +10,9 @@ const props = defineProps<{
 const width = ref(300);
 const height = ref(100);
 const marginTop = 20;
-const marginRight = 30;
+const marginRight = 40;
 const marginBottom = 30;
-const marginLeft = 40;
+const marginLeft = 0;
 
 // Create the SVG container.
 const svg = d3
@@ -88,11 +88,15 @@ watch(
         .tickSizeOuter(0),
     );
 
-    const y = d3.scaleLinear(
-      [0, d3.max(value, (d) => d[1])!],
-      [height - marginBottom, marginTop],
+    const maxY = d3.max(value, (d) => d[1])!;
+    const tickFormat = d3.formatPrefix(".0", maxY);
+    const y = d3.scaleLinear([0, maxY], [height - marginBottom, marginTop]);
+    yAxis.call(
+      d3
+        .axisRight(y)
+        .ticks(height / 40)
+        .tickFormat(tickFormat),
     );
-    yAxis.call(d3.axisRight(y).ticks(height / 40));
 
     const line = d3
       .line()
@@ -111,10 +115,10 @@ watch(
     yAxis.call((g) =>
       g
         .select("text")
-        .attr("x", 0)
-        .attr("y", marginTop * 0.8)
+        .attr("x", marginRight * 0.5)
+        .attr("y", marginTop * 0.5)
         .attr("fill", "currentColor")
-        .attr("text-anchor", "start")
+        .attr("text-anchor", "center")
         .text(unit),
     );
   },
