@@ -102,7 +102,7 @@ function onResetGroup(index: number) {
 
 <template>
   <div class="grid">
-    <Message class="col-12" v-if="readError">
+    <Message class="col-12" severity="error" :closable="false" v-if="readError">
       {{ readError }}
     </Message>
 
