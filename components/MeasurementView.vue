@@ -7,7 +7,7 @@ const props = defineProps<{
 
 const dataStore = useDataStore();
 const readInterval = ref<ReturnType<typeof setInterval>>();
-const readStatus = ref<boolean | Error>(false);
+const readError = ref<Error>();
 onUnmounted(() => {
   if (readInterval.value) clearInterval(readInterval.value);
 });
@@ -23,14 +23,16 @@ watch(
 
     if (!conn) return;
 
+    let reading = false;
     readInterval.value = setInterval(async () => {
-      if (readStatus.value) return;
+      if (reading) return;
 
-      readStatus.value = true;
+      reading = true;
 
       try {
         const data = await conn.readData();
         dataStore.addDataPoint(data);
+        readError.value = undefined;
       } catch (e) {
         readInterval.value = undefined;
 
@@ -38,10 +40,10 @@ watch(
           return;
         }
 
-        readStatus.value = e as Error;
+        readError.value = e as Error;
         console.error("Reading measurement failed:", e);
       } finally {
-        if (readStatus.value === true) readStatus.value = false;
+        reading = false;
       }
     }, 1000);
   },
@@ -71,12 +73,11 @@ function onResetGroup(index: number) {
 
 <template>
   <div class="grid">
-    <Message class="col-12" v-if="readStatus && readStatus !== true">{{
-      readStatus
-    }}</Message>
+    <Message class="col-12" v-if="readError">
+      {{ readError }}
+    </Message>
 
     <div class="col-2">
-      <Badge :class="[readStatus ? 'bg-teal-200' : 'surface-ground']"></Badge>
       <MeasurementDisplay
         v-if="dataStore.latestDataPoint"
         :value="dataStore.latestDataPoint"

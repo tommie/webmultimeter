@@ -183,7 +183,59 @@ export namespace UM25CProtocol {
   }
 }
 
-export class UM25CConnection {
+export class UM25CEvent extends Event {
+  public error?: Error;
+  public receiving?: boolean;
+
+  constructor(name: "close", conn: UM25CConnection, fields: {});
+  constructor(name: "error", conn: UM25CConnection, fields: { error: Error });
+  constructor(
+    name: "receiving",
+    conn: UM25CConnection,
+    fields: { receiving: boolean },
+  );
+  constructor(
+    name: string,
+    public conn: UM25CConnection,
+    fields: { error?: Error; receiving?: boolean },
+    eventInitDict?: EventInit,
+  ) {
+    super(name, eventInitDict);
+    Object.assign(this, fields);
+  }
+}
+
+type EventName = "close" | "error" | "receiving";
+
+interface UM25CEventTarget {
+  dispatchEvent(e: UM25CEvent): void;
+
+  addEventListener(
+    e: EventName,
+    callback: (e: UM25CEvent) => void,
+    options?: boolean | EventListenerOptions,
+  ): void;
+  addEventListener(
+    e: string,
+    callback: EventListenerOrEventListenerObject | null,
+    options?: boolean | EventListenerOptions,
+  ): void;
+
+  removeEventListener(
+    e: EventName,
+    callback: (e: UM25CEvent) => void,
+    options?: boolean | EventListenerOptions,
+  ): void;
+  removeEventListener(
+    e: string,
+    callback: EventListenerOrEventListenerObject | null,
+    options?: boolean | EventListenerOptions,
+  ): void;
+}
+
+const UM25CEventTarget = EventTarget as { new (): UM25CEventTarget };
+
+export class UM25CConnection extends UM25CEventTarget {
   public static readonly SERIAL_FILTERS: SerialPortFilter[] = [
     { bluetoothServiceClassId: "00001101-0000-1000-8000-00805f9b34fb" },
   ];
@@ -200,6 +252,8 @@ export class UM25CConnection {
     private readonly port: SerialPort,
     private readonly options = { readTimeout: 800 },
   ) {
+    super();
+
     if (!port.readable || !port.writable) {
       throw new Error("The serial port object is not open");
     }
@@ -209,6 +263,7 @@ export class UM25CConnection {
 
     this.runRead().catch((e) => {
       this.failure_ = e;
+      this.dispatchEvent(new UM25CEvent("error", this, { error: e }));
     });
   }
 
@@ -216,10 +271,16 @@ export class UM25CConnection {
     await this.writer.close();
     await this.reader.cancel();
     await this.port.close();
+
+    this.dispatchEvent(new UM25CEvent("close", this, {}));
   }
 
   public get failed() {
     return Boolean(this.failure_);
+  }
+
+  public get receiving() {
+    return this.dataAcceptors.length > 0;
   }
 
   public async selectGroup(n: number) {
@@ -292,12 +353,12 @@ export class UM25CConnection {
 
         const i = this.dataAcceptors.indexOf(acceptor);
         if (i >= 0) {
-          this.dataAcceptors.splice(i, 1);
+          this.deleteAcceptor(i);
           reject(new Error("Read timed out"));
         }
       }, this.options.readTimeout);
 
-      this.dataAcceptors.push(acceptor);
+      this.pushAcceptor(acceptor);
     });
   }
 
@@ -315,7 +376,7 @@ export class UM25CConnection {
         this.failure_ = new DOMException("Connection closed", "AbortError");
         while (this.dataAcceptors.length > 0) {
           this.dataAcceptors[0][0](new Uint8Array());
-          this.dataAcceptors.splice(0, 1);
+          this.deleteAcceptor(0);
         }
         break;
       }
@@ -335,7 +396,7 @@ export class UM25CConnection {
         const [naccepted, fulfilled] = fn(buf.slice(0, n));
 
         if (naccepted < n || fulfilled) {
-          this.dataAcceptors.splice(0, 1);
+          this.deleteAcceptor(0);
           frontHasAccepted = false;
         } else {
           frontHasAccepted = true;
@@ -344,6 +405,24 @@ export class UM25CConnection {
         buf.copyWithin(0, naccepted);
         n -= naccepted;
       }
+    }
+  }
+
+  private pushAcceptor(acceptor: UM25CConnection["dataAcceptors"][0]) {
+    this.dataAcceptors.push(acceptor);
+    if (this.dataAcceptors.length === 1) {
+      this.dispatchEvent(
+        new UM25CEvent("receiving", this, { receiving: true }),
+      );
+    }
+  }
+
+  private deleteAcceptor(index: number) {
+    this.dataAcceptors.splice(index, 1);
+    if (this.dataAcceptors.length === 0) {
+      this.dispatchEvent(
+        new UM25CEvent("receiving", this, { receiving: false }),
+      );
     }
   }
 }

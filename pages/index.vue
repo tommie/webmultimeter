@@ -43,6 +43,7 @@ async function onClickClose() {
           <Button label="Close" @click="onClickClose" />
         </template>
         <template #end>
+          <ConnectionStateIndicator :conn="conn" />
           <div class="ml-3 text-color-secondary hover:text-color">
             Connected to a {{ UM25CProtocol.DeviceModel[deviceModel] }}
           </div>
