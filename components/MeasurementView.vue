@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { type UM25CConnection } from "../utils/um25c";
+import { type UM25CConnection, UM25CProtocol } from "../utils/um25c";
 
 const props = defineProps<{
   conn: UM25CConnection;
@@ -47,6 +47,10 @@ watch(
   },
   { immediate: true },
 );
+
+function onResetGroup(index: number) {
+  return props.conn.clickButton(UM25CProtocol.Button.RESET_GROUP);
+}
 </script>
 
 <template>
@@ -60,6 +64,7 @@ watch(
       <MeasurementDisplay
         v-if="dataStore.latestDataPoint"
         :value="dataStore.latestDataPoint"
+        @resetgroup="onResetGroup"
       />
     </div>
 

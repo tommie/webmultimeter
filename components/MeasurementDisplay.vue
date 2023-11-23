@@ -6,6 +6,10 @@ defineProps<{
   value: UM25CConnection.TimestampedDataPoint;
 }>();
 
+const emit = defineEmits<{
+  (e: "resetgroup", index: number): void;
+}>();
+
 const viewStore = useViewStore();
 
 const TEMPERATURE_UNITS: ComputedUnit[] = [
@@ -77,7 +81,22 @@ const CHARGE_UNITS: ComputedUnit[] = [
           :unit="viewStore.getUnits('charge', 'C')"
           @update:unit="(unit) => viewStore.setUnits('charge', unit)"
         />
+        <Button
+          class="reset-button"
+          label="Reset"
+          severity="warning"
+          size="sm"
+          text
+          @click="() => emit('resetgroup', index)"
+        />
       </Fieldset>
     </template>
   </div>
 </template>
+
+<style scoped>
+/* Dim it down a bit, since it's hardly an urgent action. */
+.reset-button:not(:hover) {
+  opacity: 0.8;
+}
+</style>
