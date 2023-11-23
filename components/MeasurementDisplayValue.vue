@@ -91,7 +91,7 @@ function onClick() {
       {{ label }}
     </div>
     <div :class="['value', 'flex-1', size === 'mid' ? 'text-5xl' : 'text-2xl']">
-      {{ scaled[0] }} {{ scaled[1] }}{{ unit.label }}
+      {{ scaled[0] }}&nbsp;{{ scaled[1] }}{{ unit.label }}
     </div>
   </div>
 </template>

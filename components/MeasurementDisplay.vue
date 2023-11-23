@@ -66,22 +66,26 @@ const CHARGE_UNITS: ComputedUnit[] = [
         class="my-3"
         :pt="{ content: { class: 'flex flex-column gap-3' } }"
       >
-        <MeasurementDisplayValue
-          label="Energy"
-          :value="group.energy"
-          size="sm"
-          :units="ENERGY_UNITS"
-          :unit="viewStore.getUnits('energy', 'J')"
-          @update:unit="(unit) => viewStore.setUnits('energy', unit)"
-        />
-        <MeasurementDisplayValue
-          label="Charge"
-          :value="group.charge"
-          size="sm"
-          :units="CHARGE_UNITS"
-          :unit="viewStore.getUnits('charge', 'C')"
-          @update:unit="(unit) => viewStore.setUnits('charge', unit)"
-        />
+        <div class="grid">
+          <MeasurementDisplayValue
+            class="col-12 md:col-6"
+            label="Energy"
+            :value="group.energy"
+            size="sm"
+            :units="ENERGY_UNITS"
+            :unit="viewStore.getUnits('energy', 'J')"
+            @update:unit="(unit) => viewStore.setUnits('energy', unit)"
+          />
+          <MeasurementDisplayValue
+            class="col-12 md:col-6"
+            label="Charge"
+            :value="group.charge"
+            size="sm"
+            :units="CHARGE_UNITS"
+            :unit="viewStore.getUnits('charge', 'C')"
+            @update:unit="(unit) => viewStore.setUnits('charge', unit)"
+          />
+        </div>
         <Button
           class="reset-button"
           label="Reset"
