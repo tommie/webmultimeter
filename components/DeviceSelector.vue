@@ -78,6 +78,33 @@ async function onClickOpenOther() {
   }
 }
 
+function portDescription(port: SerialPort) {
+  const info = port.getInfo();
+
+  if (info.bluetoothServiceClassId) {
+    const m = /0000(.{4})-0000-1000-8000-00805f9b34fb/i.exec(
+      info.bluetoothServiceClassId,
+    );
+    if (m) {
+      switch (m[1]) {
+        case "1101":
+          return "A Bluetooth device, serial port";
+
+        default:
+          return `A Bluetooth device, class ${m[1]}`;
+      }
+    }
+
+    return `A Bluetooth device, class ${info.bluetoothServiceClassId}`;
+  }
+
+  if (info.usbVendorId && info.usbProductId) {
+    return `A USB device, ${info.usbVendorId}:${info.usbProductId}`;
+  }
+
+  return "An unknown device";
+}
+
 defineExpose({
   // Attempt to auto-connect, if that is a reasonable thing to do.
   autoConnect,
@@ -92,18 +119,24 @@ defineExpose({
     <div v-else-if="!available">
       Web Serial API not available in this browser
     </div>
-    <div v-else>
-      <ol>
-        <li v-for="(port, index) in serialPorts" :key="index">
-          {{ port.getInfo() }}
-          <button @click="() => onClickOpen(port)" :disabled="connecting">
-            Open
-          </button>
-        </li>
-      </ol>
-      <button @click="onClickOpenOther" :disabled="connecting">
-        Open Other
-      </button>
+    <div v-else class="flex flex-column align-items-center">
+      <div v-for="(port, index) in serialPorts" :key="index">
+        <Button
+          class="w-full"
+          :disabled="connecting"
+          :label="portDescription(port)"
+          :title="JSON.stringify(port.getInfo())"
+          @click="() => onClickOpen(port)"
+        />
+      </div>
+
+      <Button
+        class="mt-4"
+        severity="secondary"
+        :disabled="connecting"
+        label="Open Other"
+        @click="onClickOpenOther"
+      />
 
       <div>
         <span v-if="connecting">Connecting</span>

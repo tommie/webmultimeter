@@ -2,6 +2,10 @@ interface SerialPortFilter {
   bluetoothServiceClassId?: string;
 }
 
+interface SerialPortInfo {
+  bluetoothServiceClassId?: string;
+}
+
 interface ArrayBufferConstructor {
   new (byteLength: number, options: { maxByteLength?: number }): ArrayBuffer;
 }
