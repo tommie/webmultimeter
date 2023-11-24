@@ -2,11 +2,12 @@
 import { type UM25CConnection } from "../utils/um25c";
 import { type ComputedUnit } from "./MeasurementDisplayValue.vue";
 
-defineProps<{
+const props = defineProps<{
   value: UM25CConnection.TimestampedDataPoint;
 }>();
 
 const emit = defineEmits<{
+  (e: "activategroup", index: number): void;
   (e: "resetgroup", index: number): void;
 }>();
 
@@ -26,6 +27,31 @@ const CHARGE_UNITS: ComputedUnit[] = [
   { label: "C", fn: (v) => v },
   { label: "Ah", fn: (v) => v * 3600 },
 ];
+
+const targetGroup = ref(props.value.screen.group);
+watch(
+  () => props.value.screen.group,
+  (group) => {
+    targetGroup.value = group;
+  },
+);
+
+const targetGroupTimeout = ref<ReturnType<typeof setTimeout>>();
+onUnmounted(() => {
+  if (targetGroupTimeout.value) clearTimeout(targetGroupTimeout.value);
+});
+
+function onClickGroupActivate(index: number) {
+  targetGroup.value = index;
+  emit("activategroup", index);
+
+  // Communication may be spotty, so revert after a timeout. There is no
+  // command ack in the protocol.
+  targetGroupTimeout.value = setTimeout(() => {
+    targetGroupTimeout.value = undefined;
+    targetGroup.value = props.value.screen.group;
+  }, 10000);
+}
 </script>
 
 <template>
@@ -86,14 +112,27 @@ const CHARGE_UNITS: ComputedUnit[] = [
             @update:unit="(unit) => viewStore.setUnits('charge', unit)"
           />
         </div>
-        <Button
-          class="reset-button"
-          label="Reset"
-          severity="warning"
-          size="small"
-          text
-          @click="() => emit('resetgroup', index)"
-        />
+        <div class="grid">
+          <div class="col-12 md:col-6 text-center">
+            <RadioButton
+              class="active-button"
+              title="Selects this group for recording energy and charge"
+              aria-label="Selects this group for recording energy and charge"
+              :value="index"
+              :model-value="value.screen.group"
+              :disabled="targetGroup !== value.screen.group"
+              @click="() => onClickGroupActivate(index)"
+            />
+          </div>
+          <Button
+            class="col-12 md:col-6 reset-button"
+            label="Reset"
+            severity="warning"
+            size="small"
+            text
+            @click="() => emit('resetgroup', index)"
+          />
+        </div>
       </Fieldset>
     </template>
   </div>

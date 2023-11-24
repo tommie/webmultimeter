@@ -95,6 +95,10 @@ const groupUnit = computed(() => {
   }
 });
 
+function onActivateGroup(index: number) {
+  return props.conn.selectGroup(index);
+}
+
 function onResetGroup(index: number) {
   return props.conn.clickButton(UM25CProtocol.Button.RESET_GROUP);
 }
@@ -110,6 +114,7 @@ function onResetGroup(index: number) {
       <MeasurementDisplay
         v-if="dataStore.latestDataPoint"
         :value="dataStore.latestDataPoint"
+        @activategroup="onActivateGroup"
         @resetgroup="onResetGroup"
       />
     </div>
