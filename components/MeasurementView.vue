@@ -6,9 +6,27 @@ const props = defineProps<{
 }>();
 
 const dataStore = useDataStore();
+const readError = ref<Error>();
+async function openDatabase() {
+  try {
+    await dataStore.openDatabase();
+  } catch (e) {
+    console.error("Opening the database failed:", e);
+    readError.value = e as Error;
+  }
+}
+onMounted(() => openDatabase());
+watch(
+  () => dataStore.databaseOpen,
+  (databaseOpen) => {
+    if (databaseOpen) return;
+
+    return openDatabase();
+  },
+);
+
 const viewStore = useViewStore();
 const readInterval = ref<ReturnType<typeof setInterval>>();
-const readError = ref<Error>();
 onUnmounted(() => {
   if (readInterval.value) clearInterval(readInterval.value);
 });

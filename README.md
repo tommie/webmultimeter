@@ -3,8 +3,9 @@
 This is a web frontend that doesn't require Python to run; it uses Web
 Serial API to connect directly to the Bluetooth device.
 
-This is a quick hack. It probably leaks memory, and it uses
-Local Storage where it should use IndexedDB.
+Uses IndexedDB for storing data points, to support a large number of them.
+
+Status: **alpha**. Usable, but expect memory leaks and rough edges.
 
 ![Screenshot](./docs/media/screenshot.png)
 
