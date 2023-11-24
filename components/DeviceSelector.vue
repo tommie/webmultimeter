@@ -138,7 +138,7 @@ defineExpose({
         @click="onClickOpenOther"
       />
 
-      <div>
+      <div class="mt-4">
         <span v-if="connecting">Connecting</span>
         <span v-else-if="error">Connection failed: {{ error.toString() }}</span>
       </div>

@@ -4,10 +4,12 @@ import { type UM25CConnection, UM25CProtocol } from "../utils/um25c";
 
 const viewStore = useViewStore();
 const selectorRef = ref<typeof DeviceSelector>();
-onMounted(async () => {
-  if (!viewStore.autoConnect || !selectorRef.value) return;
+watch(selectorRef, async (selectorRef) => {
+  if (!selectorRef) return;
 
-  selectorRef.value.autoConnect();
+  if (!viewStore.autoConnect || !selectorRef) return;
+
+  selectorRef.autoConnect();
 });
 
 async function onConnected(connection: UM25CConnection) {
@@ -15,6 +17,7 @@ async function onConnected(connection: UM25CConnection) {
     connection,
     (await connection.readData()).deviceModel,
   );
+  viewStore.setAutoConnect(false);
 }
 </script>
 
