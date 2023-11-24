@@ -1,12 +1,16 @@
-import { acceptHMRUpdate, defineStore } from "pinia";
+import { acceptHMRUpdate, defineStore, skipHydrate } from "pinia";
 
 import { type UM25CConnection, UM25CProtocol } from "../utils/um25c";
 
 export const useViewStore = defineStore("viewStore", () => {
-  const units = ref(
-    new Map<string, string>(
-      Object.entries(
-        process.client ? localStorage.getItem("viewStore/units") ?? "{}" : [],
+  const units = skipHydrate(
+    ref(
+      new Map<string, string>(
+        Object.entries(
+          process.client
+            ? JSON.parse(localStorage.getItem("viewStore/units") ?? "{}")
+            : [],
+        ),
       ),
     ),
   );
