@@ -100,9 +100,8 @@ export const useDataStore = defineStore("dataStore", () => {
     idb.value?.close();
   });
 
-  const dataPoints = ref<UM25CConnection.TimestampedDataPoint[]>(
-    JSON.parse(localStorage.getItem("dataStore/points") ?? "[]"),
-  );
+  const dataPoints = ref<UM25CConnection.TimestampedDataPoint[]>([]);
+  const latestDataPoint = ref<UM25CConnection.TimestampedDataPoint>();
   watch(idb, async (idb) => {
     if (!idb) return;
 
@@ -119,14 +118,13 @@ export const useDataStore = defineStore("dataStore", () => {
 
     dataPoints,
 
-    latestDataPoint: computed(
-      () => dataPoints.value[dataPoints.value.length - 1],
-    ),
+    latestDataPoint,
 
     async addDataPoint(p: UM25CConnection.TimestampedDataPoint) {
       if (!idb.value) return;
 
       dataPoints.value.push(p);
+      latestDataPoint.value = p;
       await writeDataPoint(
         idb.value.transaction("dataPoints", "readwrite"),
         "default",
