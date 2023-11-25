@@ -70,13 +70,15 @@ watch(
 );
 
 function activeGroupIndices() {
-  return dataStore.latestDataPoint.groups
-    .map(
-      (group, index) =>
-        [index, group] as [number, UM25CProtocol.GroupDataPoint],
-    )
-    .filter(([index, group]) => group.energy > 0)
-    .map(([index]) => index);
+  return (
+    dataStore.latestDataPoint?.groups
+      .map(
+        (group, index) =>
+          [index, group] as [number, UM25CProtocol.GroupDataPoint],
+      )
+      .filter(([index, group]) => group.energy > 0)
+      .map(([index]) => index) ?? []
+  );
 }
 
 const groupMeasurementGraph = ref<"charge" | "energy">("energy");
