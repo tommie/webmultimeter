@@ -89,7 +89,9 @@ watch(
     );
 
     const maxY = d3.max(value, (d) => d[1])!;
-    const tickFormat = d3.formatPrefix(".0", maxY);
+    // formatPrefix chooses a large prefix very early (around 1). Waiting until
+    // 2 makes more sense.
+    const tickFormat = d3.formatPrefix(".0", maxY / 2);
     const y = d3.scaleLinear([0, maxY], [height - marginBottom, marginTop]);
     yAxis.call(
       d3
