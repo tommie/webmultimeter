@@ -39,20 +39,20 @@ const PREFIXES: [string, number][] = [
   ["p", -12],
 ];
 
-const unit = ref(
-  props.units.find((v) => v.label === props.unit) ?? {
-    label: props.unit,
-    fn: (v) => v,
-    decimals: props.decimals,
-  },
-);
+const unit = ref<ComputedUnit>({
+  label: props.unit,
+  fn: (v) => v,
+  decimals: props.decimals,
+  ...props.units.find((v) => v.label === props.unit),
+});
 watch(
   [() => props.unit, () => props.units, () => props.decimals],
   ([u, units, decimals]) => {
-    unit.value = units.find((v) => v.label === u) ?? {
-      label: u,
+    unit.value = {
+      label: props.unit,
       fn: (v) => v,
-      decimals,
+      decimals: props.decimals,
+      ...props.units.find((v) => v.label === props.unit),
     };
   },
 );
@@ -62,7 +62,7 @@ const scaled = computed(() => {
 
   for (const [label, exp10] of PREFIXES) {
     const base = Math.pow(10, exp10);
-    if (value >= base) {
+    if (value >= base * (unit.value.decimals ? 1 : 2)) {
       return [(value / base).toFixed(unit.value.decimals), label];
     }
   }
